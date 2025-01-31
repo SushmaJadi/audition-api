@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 import com.audition.web.AuditionController;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -45,9 +44,6 @@ public class AuditionIntegrationClient {
         // TODO make RestTemplate call to get Posts from https://jsonplaceholder.typicode.com/posts
 
         objectMapper = webServiceConfiguration.objectMapper();
-       /* AuditionPost[] auditionPost= restTemplate.getForObject("https://jsonplaceholder.typicode.com/posts", AuditionPost[].class);
-        List<AuditionPost> auditionPosts = List.of(auditionPost);
-        */
         ResponseEntity<AuditionPost[]> audit = restTemplate.getForEntity("https://jsonplaceholder.typicode.com/posts", AuditionPost[].class);
         objectMapper.writeValue(new File("c:/Users/sushm/audition-api/src/main/resources/files/auditPost.json"),audit);
         MultiValueMap<String, String> httpHeaders = new LinkedMultiValueMap<>();
@@ -68,7 +64,7 @@ public class AuditionIntegrationClient {
             ObjectMapper objectMapper = webServiceConfiguration.objectMapper();
           ResponseEntity <AuditionPost[]> auditionPost = restTemplate.getForEntity("https://jsonplaceholder.typicode.com/posts", AuditionPost[].class);
           AuditionPost[] auditionPosts = auditionPost.getBody();
-            Arrays.stream(auditionPosts).anyMatch(audit -> {
+           auditPost = Arrays.stream(auditionPosts).filter(audit -> {
 
                 auditPost = new AuditionPost();
                 if (audit.getId() == Integer.parseInt(id)) {
@@ -79,9 +75,8 @@ public class AuditionIntegrationClient {
                         throw new RuntimeException(e);
                     }
                 }
-
                 return true;
-            });
+            }).findAny().orElse(null);
 
                 return auditPost;
 
@@ -93,7 +88,8 @@ public class AuditionIntegrationClient {
                 // TODO Find a better way to handle the exception so that the original error message is not lost. Feel free to change this function.
                 throw new SystemException("Unknown Error message");
             }
-        }
+            }
+
     }
 
     // TODO Write a method GET comments for a post from https://jsonplaceholder.typicode.com/posts/{postId}/comments - the comments must be returned as part of the post.

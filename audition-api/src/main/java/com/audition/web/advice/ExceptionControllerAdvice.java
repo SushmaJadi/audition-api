@@ -1,21 +1,23 @@
 package com.audition.web.advice;
 
-import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
-import static org.springframework.http.HttpStatus.METHOD_NOT_ALLOWED;
-
 import com.audition.common.exception.SystemException;
 import com.audition.common.logging.AuditionLogger;
 import io.micrometer.common.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ProblemDetail;
+import org.springframework.http.*;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.context.request.ServletWebRequest;
+import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static org.springframework.http.HttpStatus.METHOD_NOT_ALLOWED;
 
 
 @ControllerAdvice
@@ -28,6 +30,7 @@ public class ExceptionControllerAdvice extends ResponseEntityExceptionHandler {
 
     @Autowired
     private AuditionLogger logger;
+
 
     @ExceptionHandler(HttpClientErrorException.class)
     ProblemDetail handleHttpClientException(final HttpClientErrorException e) {
@@ -51,7 +54,6 @@ public class ExceptionControllerAdvice extends ResponseEntityExceptionHandler {
         return createProblemDetail(e, status);
 
     }
-
 
     private ProblemDetail createProblemDetail(final Exception exception,
         final HttpStatusCode statusCode) {
@@ -88,6 +90,22 @@ public class ExceptionControllerAdvice extends ResponseEntityExceptionHandler {
             return METHOD_NOT_ALLOWED;
         }
         return INTERNAL_SERVER_ERROR;
+    }
+    @ExceptionHandler(RuntimeException.class)
+    public final ResponseEntity<Object> handleUserNotFoundException(Exception ex, WebRequest request) {
+        SystemException systemException = new SystemException(ex.getMessage(),request.getDescription(false),ex);
+        return new ResponseEntity(systemException, HttpStatus.NOT_FOUND);
+    }
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(
+            MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        SystemException systemException = null;
+        if (request instanceof ServletWebRequest servletWebRequest){
+            systemException   = new SystemException(ex.getFieldError().getDefaultMessage(),400,ex);
+
+        }
+
+        return new ResponseEntity(systemException, HttpStatus.BAD_REQUEST);
     }
 }
 
