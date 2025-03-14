@@ -1,4 +1,5 @@
 package com.audition.configuration;
+import com.audition.integration.AuditionIntegrationClient;
 import com.audition.model.AuditionPost;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -43,7 +44,8 @@ public class WebServiceConfiguration implements WebMvcConfigurer {
         ObjectMapper objectMapper = objectMapper();
         AuditionPost[] auditPost = restTemplate.getForObject("https://jsonplaceholder.typicode.com/posts", AuditionPost[].class);
         auditionPost =List.of(auditPost);
-        objectMapper.writeValue(new File("c:/Users/sushm/audition-api/src/main/resources/files/auditPost1.json"),auditionPost);
+        File file  = new File( "c:/Users/sushm/audition-api/src/main/resources/files/auditPost1.json");
+        objectMapper.writeValue(file,auditionPost);
 
        logger.info(objectMapper.writeValueAsString(auditPost));
 

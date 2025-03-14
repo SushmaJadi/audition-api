@@ -35,7 +35,6 @@ public class AuditionIntegrationClient {
 
     @Autowired
     WebServiceConfiguration webServiceConfiguration;
-    ObjectMapper objectMapper;
 
     AuditionPost auditPost;
 
@@ -43,15 +42,13 @@ public class AuditionIntegrationClient {
     public List<AuditionPost> getPosts() throws IOException {
         // TODO make RestTemplate call to get Posts from https://jsonplaceholder.typicode.com/posts
 
-        objectMapper = webServiceConfiguration.objectMapper();
         ResponseEntity<AuditionPost[]> audit = restTemplate.getForEntity("https://jsonplaceholder.typicode.com/posts", AuditionPost[].class);
-        objectMapper.writeValue(new File("c:/Users/sushm/audition-api/src/main/resources/files/auditPost.json"),audit);
         MultiValueMap<String, String> httpHeaders = new LinkedMultiValueMap<>();
         httpHeaders.add("Content-Type","application/json");
         HttpEntity<?> httpEntity = new HttpEntity<>(audit,httpHeaders);
         ResponseEntity<AuditionPost[]> responseEntity= restTemplate.exchange("https://jsonplaceholder.typicode.com/posts", HttpMethod.GET,httpEntity,AuditionPost[].class);
         List<AuditionPost> auditionPosts = List.of(responseEntity.getBody());
-
+        webServiceConfiguration.restTemplate();
 
         return auditionPosts;
     }
@@ -61,16 +58,14 @@ public class AuditionIntegrationClient {
 
         try {
 
-            ObjectMapper objectMapper = webServiceConfiguration.objectMapper();
           ResponseEntity <AuditionPost[]> auditionPost = restTemplate.getForEntity("https://jsonplaceholder.typicode.com/posts", AuditionPost[].class);
           AuditionPost[] auditionPosts = auditionPost.getBody();
            auditPost = Arrays.stream(auditionPosts).filter(audit -> {
 
-                auditPost = new AuditionPost();
                 if (audit.getId() == Integer.parseInt(id)) {
                     auditPost = audit;
                     try {
-                        objectMapper.writeValue(new File("C:/Users/sushm/Sushma API/audition-api/src/main/resources/files/AuditUser.json"), audit);
+                        webServiceConfiguration.restTemplate();
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
