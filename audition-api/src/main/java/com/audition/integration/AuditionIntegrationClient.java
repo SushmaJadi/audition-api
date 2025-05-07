@@ -3,24 +3,18 @@ package com.audition.integration;
 import com.audition.common.exception.SystemException;
 import com.audition.configuration.WebServiceConfiguration;
 import com.audition.model.AuditionPost;
-
-import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import com.audition.web.AuditionController;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
@@ -43,12 +37,15 @@ public class AuditionIntegrationClient {
         // TODO make RestTemplate call to get Posts from https://jsonplaceholder.typicode.com/posts
 
         ResponseEntity<AuditionPost[]> audit = restTemplate.getForEntity("https://jsonplaceholder.typicode.com/posts", AuditionPost[].class);
-        MultiValueMap<String, String> httpHeaders = new LinkedMultiValueMap<>();
+
+        List<AuditionPost> auditionPosts = List.of(Objects.requireNonNull(audit.getBody()));
+        webServiceConfiguration.restTemplate();
+
+          /* MultiValueMap<String, String> httpHeaders = new LinkedMultiValueMap<>();
         httpHeaders.add("Content-Type","application/json");
         HttpEntity<?> httpEntity = new HttpEntity<>(audit,httpHeaders);
         ResponseEntity<AuditionPost[]> responseEntity= restTemplate.exchange("https://jsonplaceholder.typicode.com/posts", HttpMethod.GET,httpEntity,AuditionPost[].class);
-        List<AuditionPost> auditionPosts = List.of(responseEntity.getBody());
-        webServiceConfiguration.restTemplate();
+            */
 
         return auditionPosts;
     }
@@ -60,20 +57,22 @@ public class AuditionIntegrationClient {
 
           ResponseEntity <AuditionPost[]> auditionPost = restTemplate.getForEntity("https://jsonplaceholder.typicode.com/posts", AuditionPost[].class);
           AuditionPost[] auditionPosts = auditionPost.getBody();
-           auditPost = Arrays.stream(auditionPosts).filter(audit -> {
+            if (auditionPosts != null) {
+                auditPost = Arrays.stream(auditionPosts).filter(audit -> {
 
-                if (audit.getId() == Integer.parseInt(id)) {
-                    auditPost = audit;
-                    try {
-                        webServiceConfiguration.restTemplate();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-                return true;
-            }).findAny().orElse(null);
+                     if (audit.getId() == Integer.parseInt(id)) {
+                         auditPost = audit;
+                         try {
+                             webServiceConfiguration.restTemplate();
+                         } catch (IOException e) {
+                             throw new RuntimeException(e);
+                         }
+                     }
+                     return true;
+                 }).findAny().orElse(null);
+            }
 
-                return auditPost;
+            return auditPost;
 
         } catch (final HttpClientErrorException e) {
             if (e.getStatusCode() == HttpStatus.NOT_FOUND) {

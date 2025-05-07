@@ -1,5 +1,5 @@
 package com.audition.configuration;
-import com.audition.integration.AuditionIntegrationClient;
+
 import com.audition.model.AuditionPost;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -20,7 +20,6 @@ import java.util.List;
 public class WebServiceConfiguration implements WebMvcConfigurer {
 
     private List<AuditionPost> auditionPost;
-    private static final String YEAR_MONTH_DAY_PATTERN = "yyyy-MM-dd";
     Logger logger = LoggerFactory.getLogger(WebServiceConfiguration.class);
 
 
@@ -43,11 +42,13 @@ public class WebServiceConfiguration implements WebMvcConfigurer {
 
         ObjectMapper objectMapper = objectMapper();
         AuditionPost[] auditPost = restTemplate.getForObject("https://jsonplaceholder.typicode.com/posts", AuditionPost[].class);
-        auditionPost =List.of(auditPost);
+        if (auditPost != null) {
+            auditionPost =List.of(auditPost);
+        }
         File file  = new File( "c:/Users/sushm/audition-api/src/main/resources/files/auditPost1.json");
         objectMapper.writeValue(file,auditionPost);
 
-       logger.info(objectMapper.writeValueAsString(auditPost));
+        logger.info(objectMapper.writeValueAsString(auditPost));
 
        // TODO create a logging interceptor that logs request/response for rest template calls.
 

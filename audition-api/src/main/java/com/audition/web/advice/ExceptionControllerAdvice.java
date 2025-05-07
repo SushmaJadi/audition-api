@@ -3,6 +3,7 @@ package com.audition.web.advice;
 import com.audition.common.exception.SystemException;
 import com.audition.common.logging.AuditionLogger;
 import io.micrometer.common.util.StringUtils;
+import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +12,6 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
@@ -95,18 +95,18 @@ public class ExceptionControllerAdvice extends ResponseEntityExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public final ResponseEntity<Object> handleUserNotFoundException(Exception ex, WebRequest request) {
         SystemException systemException = new SystemException(ex.getMessage(),request.getDescription(false),ex);
-        return new ResponseEntity(systemException, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(systemException, HttpStatus.NOT_FOUND);
     }
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
-            MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+            MethodArgumentNotValidException ex, @NotNull HttpHeaders headers,@NotNull HttpStatusCode status, @NotNull WebRequest request) {
         SystemException systemException = null;
         if (request instanceof ServletWebRequest servletWebRequest){
             systemException   = new SystemException(ex.getFieldError().getDefaultMessage(),400,ex);
 
         }
 
-        return new ResponseEntity(systemException, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(systemException, HttpStatus.BAD_REQUEST);
     }
 }
 
